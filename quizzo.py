@@ -11,7 +11,6 @@ from subprocess import call
 
 # import Bsoup
 from bs4 import BeautifulSoup
-print("Done")
 
 class colors:
     blue = '\033[94m'
@@ -121,7 +120,7 @@ def rank_answers(question_block):
 		print("reversing results...")
 		reverse = False
 
-	text = google([question], 50)
+	text = google([question], 100) #100 is the max links on a google search
 
 	results = []
 
@@ -216,10 +215,14 @@ def execute_program():
 	get_screenshot("q.png")
 	question_block = run_ocr("q.png")
 	print_question_block(question_block)
-	#save_question_block(question_block)
+	save_question_block(question_block) #Removed for now
 	results = rank_answers(question_block)
 	print_results(results)	
 	print("-----------------")
+
+def test_google(question):
+	text = google([question],100)
+	print(text)
 
 def main():
 
@@ -228,14 +231,12 @@ def main():
 	while True:
 		user_input = input("Enter input: ")
 		if user_input == "n":
-			execute_program()
+			#execute_program()
+			test_google("Which of these is a boy wizard created by J.K. Rowling?")
 		else:
 			print("Quitting program")
 			break
-		
-
 
 if __name__ == "__main__":
     
     main()
-
