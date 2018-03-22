@@ -1,6 +1,7 @@
 #Base code forked from jakemor
 
 # import libs
+print("Loading libraries...")
 import io, os, urllib, requests, re, webbrowser, json
 
 # Imports the Google Cloud client library
@@ -10,6 +11,7 @@ from subprocess import call
 
 # import Bsoup
 from bs4 import BeautifulSoup
+print("Done")
 
 class colors:
     blue = '\033[94m'
@@ -210,10 +212,7 @@ def print_results(results):
 
 	print("\n")
 
-def main():
-
-	print("\n")
-	
+def execute_program():
 	get_screenshot("q.png")
 	question_block = run_ocr("q.png")
 	print_question_block(question_block)
@@ -221,6 +220,19 @@ def main():
 	results = rank_answers(question_block)
 	print_results(results)	
 	print("-----------------")
+
+def main():
+
+	print("Starting Program!")
+	print("Type n for new computation.\n Type q to quit the program \n")
+	while True:
+		user_input = input("Enter input: ")
+		if user_input == "n":
+			execute_program()
+		else:
+			print("Quitting program")
+			break
+		
 
 
 if __name__ == "__main__":
