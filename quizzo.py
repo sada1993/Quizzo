@@ -26,7 +26,6 @@ def get_screenshot(img_name):
 	"""
 
 	print("grabbing screenshot...")
-	# call(["screencapture","-R", "300,320,256,256", img_name]) # youtube
 	call(["screencapture","-R", "430,167,400,370", img_name]) # live
 	call(["sips","-Z","350", img_name])
 
@@ -36,7 +35,6 @@ def run_ocr(img_name):
 		Runs OCR on the grabbed screenshot
 
 	"""
-
 
 	print("running OCR...")
 	client = vision.ImageAnnotatorClient()
@@ -68,21 +66,23 @@ def run_ocr(img_name):
 	reverse = True
 
 	return { 
-		"question": question,
-		"ans_1": ans_1,
-		"ans_2": ans_2,
-		"ans_3": ans_3,
+		"question": question.decode("utf-8"),
+		"ans_1": ans_1.decode("utf-8"),
+		"ans_2": ans_2.decode("utf-8"),
+		"ans_3": ans_3.decode("utf-8"),
 	}
 
 def google(q_list, num):
 
 	"""
 		given a list of queries, this function Google's them as a concatenated string.
+		input: q_list - question
+		num: number of webpages to consider when googling results
 		
 	"""
 
 	params = {"q":" ".join(q_list), "num":num}
-	url_params = urllib.urlencode(params)
+	url_params = urllib.parse.urlencode(params)
 	google_url = "https://www.google.com/search?" + url_params
 	r = requests.get(google_url)
 
@@ -91,7 +91,7 @@ def google(q_list, num):
 
 	text = u" ".join([span.get_text() for span in spans]).lower().encode('utf-8').strip()
 
-	return text
+	return text.decode("utf-8")
 
 def rank_answers(question_block):
 
@@ -111,9 +111,11 @@ def rank_answers(question_block):
 	ans_2 = question_block["ans_2"]
 	ans_3 = question_block["ans_3"]
 
+	print("Question = ",question)
+
 	reverse = True
 
-	if " not " in question.lower():
+	if question.lower().find(" not ") != -1:
 		print("reversing results...")
 		reverse = False
 
@@ -208,66 +210,6 @@ def print_results(results):
 
 	print("\n")
 
-# def sync_results(results):
-
-def sync_questions(question_block):
-
-	""" 
-		uploads question data to firebase
-	
-	"""
-
-	data = {
-		"question": question_block["question"], 
-		"ans_1": question_block["ans_1"], 
-		"ans_2": question_block["ans_2"], 
-		"ans_3": question_block["ans_3"],
-		"ans_1_count": 0,
-		"ans_2_count": 0,
-		"ans_3_count": 0,
-		"correct_ans": "",
-		"thinking": True
-	}
-
-	url = "https://YOUR_PROJECT_ID.firebaseio.com/q1.json"
-	r = requests.put(url, data=json.dumps(data))
-	print(r.text)
-
-def sync_results(question_block, results):
-
-	""" 
-		uploads results data to firebase (after googling)
-	
-	"""
-	
-	to_check = max(results, key= lambda x: x["count"])
-
-	if " not " in question_block["question"].lower():
-		to_check = min(results, key= lambda x: x["count"])
-
-	correct_ans = ""
-
-	for (i,r) in enumerate(results):
-		if r["ans"] == to_check["ans"]:
-			correct_ans = "ans_%s" % (i + 1)
-
-	
-	data = {
-		"question": question_block["question"], 
-		"ans_1": question_block["ans_1"], 
-		"ans_2": question_block["ans_2"], 
-		"ans_3": question_block["ans_3"],
-		"ans_1_count": results[0]["count"],
-		"ans_2_count": results[1]["count"],
-		"ans_3_count": results[2]["count"],
-		"correct_ans": correct_ans,
-		"thinking": False
-	}
-
-	url = "https://YOUR_PROJECT_ID.firebaseio.com/q1.json"
-	r = requests.put(url, data=json.dumps(data))
-	print(r.text)
-
 def main():
 
 	print("\n")
@@ -275,12 +217,9 @@ def main():
 	get_screenshot("q.png")
 	question_block = run_ocr("q.png")
 	print_question_block(question_block)
-	sync_questions(question_block)
-	save_question_block(question_block)
+	#save_question_block(question_block)
 	results = rank_answers(question_block)
-	print_results(results)
-	sync_results(question_block, results)
-	
+	print_results(results)	
 	print("-----------------")
 
 
