@@ -2,7 +2,7 @@
 
 # import libs
 print("Loading libraries...")
-import io, os, urllib, requests, re, webbrowser, json
+import io, os, urllib, requests, re, webbrowser, json, time
 
 # Imports the Google Cloud client library
 from google.cloud import vision
@@ -94,6 +94,26 @@ def google(q_list, num):
 
 	return text.decode("utf-8")
 
+def get_google_links(q_list,num_results):
+	"""
+		Returns the a list of num_results links to web pages as a result of 
+		a q_list query.
+	"""
+	params = {"q":" ".join(q_list), "num":num_results}
+	url_params = urllib.parse.urlencode(params)
+	google_url = "https://www.google.com/search?" + url_params
+	r = requests.get(google_url)
+
+	soup = BeautifulSoup(r.text)
+	links_list = []
+	for pages in soup.find_all('h3'):
+		link = pages.a.get('href')[7:]
+		index_end = link.find('&sa')
+		link = link[0:index_end]
+		links_list.append(link)
+	print(links_list)
+
+
 def rank_answers(question_block):
 
 	"""
@@ -112,15 +132,13 @@ def rank_answers(question_block):
 	ans_2 = question_block["ans_2"]
 	ans_3 = question_block["ans_3"]
 
-	print("Question = ",question)
-
 	reverse = True
 
 	if question.lower().find(" not ") != -1:
 		print("reversing results...")
 		reverse = False
 
-	text = google([question], 100) #100 is the max links on a google search
+	text = google([question], 50) #100 is the max links on a google search
 
 	results = []
 
@@ -221,8 +239,12 @@ def execute_program():
 	print("-----------------")
 
 def test_google(question):
-	text = google([question],100)
+	t1 = time.time()
+	text = get_google_links([question],10)
+	t2 = time.time()
+
 	print(text)
+	print(t2-t1)
 
 def main():
 
