@@ -103,7 +103,6 @@ def get_google_links(q_list,num_results):
 	url_params = urllib.parse.urlencode(params)
 	google_url = "https://www.google.com/search?" + url_params
 	r = requests.get(google_url)
-
 	soup = BeautifulSoup(r.text)
 	links_list = []
 	for pages in soup.find_all('h3'):
@@ -111,7 +110,23 @@ def get_google_links(q_list,num_results):
 		index_end = link.find('&sa')
 		link = link[0:index_end]
 		links_list.append(link)
-	print(links_list)
+
+	return links_list
+
+def get_text_link(links_list):
+	"""
+		Given a list of links this function returns
+		the text from this list
+	"""
+	text = []
+	for i,link in enumerate(links_list):
+		r = requests.get(link)
+		soup = BeautifulSoup(r.text)
+		[s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title'])]
+		visible_text = soup.getText()
+		visible_text = visible_text.replace('\n','')
+		text.append(visible_text)
+	return text
 
 
 def rank_answers(question_block):
@@ -240,10 +255,11 @@ def execute_program():
 
 def test_google(question):
 	t1 = time.time()
-	text = get_google_links([question],10)
+	links_list = get_google_links([question],1)
+	text_list = get_text_link(links_list)
+	print(text_list)
 	t2 = time.time()
 
-	print(text)
 	print(t2-t1)
 
 def main():
