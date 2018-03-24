@@ -132,7 +132,6 @@ def rank_answers(question_block):
 	text = google([question], 100)
 	
 	cosine_sim = cosine_similarity(text,ans_1,ans_2,ans_3)
-	cosine_sim_sorted = cosine_sim.copy() #copy to sort later
 
 	results = []
 
@@ -140,11 +139,8 @@ def rank_answers(question_block):
 	results.append({"ans": ans_2, "count": text.count(ans_2)})
 	results.append({"ans": ans_3, "count": text.count(ans_3)})
 
-	sorted_results = []
-
-	sorted_results.append({"ans": ans_1, "count": text.count(ans_1)})
-	sorted_results.append({"ans": ans_2, "count": text.count(ans_2)})
-	sorted_results.append({"ans": ans_3, "count": text.count(ans_3)})
+	sorted_results = results.copy()
+	cosine_sim_sorted = cosine_sim.copy() #copy to sort later
 
 	sorted_results.sort(key=lambda x: x["count"], reverse=reverse)
 	cosine_sim_sorted.sort(key=lambda x: x["count"], reverse=reverse)
@@ -281,7 +277,7 @@ def main():
 	while True:
 		user_input = input("Enter input: ")
 		if user_input == "n":
-			execute_test_program("A unicorn typically has one what on its head?","horn","mustache","nacho hat")
+			execute_test_program("Which of these is a common breed of dog?","marmite","malamute","merman")
 		else:
 			print("Quitting program")
 			break
