@@ -113,7 +113,6 @@ def rank_answers(question_block):
 	ans_2 = question_block["ans_2"]
 	ans_3 = question_block["ans_3"]
 
-	print("Question = ",question)
 
 	reverse = True
 
@@ -121,6 +120,12 @@ def rank_answers(question_block):
 		print("reversing results...")
 		reverse = False
 
+	#Check the question for quotes and extract if it exists
+	quote_index = question.find("\"")
+	if quote_index != -1:
+		question = question[quote_index+1:question.find("\"",quote_index+1)]
+
+	print("Question = ",question)
 	text = google([question], 50)
 
 	results = []
@@ -221,6 +226,18 @@ def execute_program():
 	print_results(results)	
 	print("-----------------")
 
+def execute_test_program(question,ans1,ans2,ans3):
+	question_block = { 
+		"question": question,
+		"ans_1": ans1,
+		"ans_2": ans2,
+		"ans_3": ans3,
+	}
+	print_question_block(question_block)
+	results = rank_answers(question_block)
+	print_results(results)
+	print("-----------------")
+
 def main():
 
 	print("Starting Program!")
@@ -228,7 +245,7 @@ def main():
 	while True:
 		user_input = input("Enter input: ")
 		if user_input == "n":
-			execute_program()
+			execute_test_program("The cooking method \"al pastor\" came to Mexico from what country? 95","el savador","spain","lebanese")
 		else:
 			print("Quitting program")
 			break
