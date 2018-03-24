@@ -8,6 +8,8 @@ import io, os, urllib, requests, re, webbrowser, json
 from google.cloud import vision
 from google.cloud.vision import types
 from subprocess import call
+import textmining
+from scipy.spatial import distance
 
 # import Bsoup
 from bs4 import BeautifulSoup
@@ -95,6 +97,7 @@ def google(q_list, num):
 
 	return text.decode("utf-8")
 
+
 def rank_answers(question_block):
 
 	"""
@@ -126,7 +129,10 @@ def rank_answers(question_block):
 		question = question[quote_index+1:question.find("\"",quote_index+1)]
 
 	print("Question = ",question)
-	text = google([question], 50)
+	text = google([question], 100)
+	
+	cosine_sim = cosine_similarity(text,ans_1,ans_2,ans_3)
+	cosine_sim_sorted = cosine_sim.copy() #copy to sort later
 
 	results = []
 
@@ -141,22 +147,23 @@ def rank_answers(question_block):
 	sorted_results.append({"ans": ans_3, "count": text.count(ans_3)})
 
 	sorted_results.sort(key=lambda x: x["count"], reverse=reverse)
+	cosine_sim_sorted.sort(key=lambda x: x["count"], reverse=reverse)
 
 	# if there's a tie redo with answers in q
 
-	if (sorted_results[0]["count"] == sorted_results[1]["count"]):
+	if ((sorted_results[0]["count"] == sorted_results[1]["count"]) | (cosine_sim_sorted[0]["count"] == cosine_sim_sorted[1]["count"])):
 		# build url, get html
 		print("running tiebreaker...")
 
 		text = google([question, ans_1, ans_2, ans_3], 50)
-
+		cosine_sim = cosine_similarity(text,ans_1,ans_2,ans_3)
 		results = []
 
 		results.append({"ans": ans_1, "count": text.count(ans_1)})
 		results.append({"ans": ans_2, "count": text.count(ans_2)})
 		results.append({"ans": ans_3, "count": text.count(ans_3)})
 
-	return results
+	return {'cosine':cosine_sim,'count':results} #Save the results of both cosine and results
 
 def print_question_block(question_block):
 
@@ -217,6 +224,34 @@ def print_results(results):
 
 	print("\n")
 
+def cosine_similarity(text,ans1,ans2,ans3):
+	tdm = textmining.TermDocumentMatrix()
+
+	#Add the parameters into a document term matrix
+	tdm.add_doc(text)
+	tdm.add_doc(ans1)
+	tdm.add_doc(ans2)
+	tdm.add_doc(ans3)
+
+	rows = []
+	for i,row in enumerate(tdm.rows(cutoff = 1)):
+		if i>0:
+			rows.append(row)
+
+	similarity = []
+	for i in range(3):
+		similarity.append(1-distance.cosine(rows[0],rows[i+1]))
+
+	results = []
+	#count is the similarity in this case
+	results.append({"ans": ans1,"count": similarity[0]})
+	results.append({"ans": ans2,"count": similarity[1]})
+	results.append({"ans": ans3,"count": similarity[2]})
+
+	return results
+
+
+
 def execute_program():
 	get_screenshot("q.png")
 	question_block = run_ocr("q.png")
@@ -235,7 +270,8 @@ def execute_test_program(question,ans1,ans2,ans3):
 	}
 	print_question_block(question_block)
 	results = rank_answers(question_block)
-	print_results(results)
+	print_results(results["cosine"])
+	print_results(results["count"])
 	print("-----------------")
 
 def main():
@@ -245,7 +281,7 @@ def main():
 	while True:
 		user_input = input("Enter input: ")
 		if user_input == "n":
-			execute_test_program("The cooking method \"al pastor\" came to Mexico from what country? 95","el savador","spain","lebanese")
+			execute_test_program("A unicorn typically has one what on its head?","horn","mustache","nacho hat")
 		else:
 			print("Quitting program")
 			break
